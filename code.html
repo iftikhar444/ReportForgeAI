@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReportForge AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f5f0;--surface:#ffffff;--sidebar:#1c1c1e;--sidebar-hover:#2a2a2c;
+  --sidebar-active:#333336;--text:#2c2c2c;--text-muted:#8a8580;--text-light:#b0aaa2;
+  --accent:#2b5e48;--accent-hover:#1f4a38;--accent-light:#e5f0ea;--accent-text:#2b5e48;
+  --highlight:#c49a3c;--highlight-light:#faf3e4;
+  --border:#e8e4dc;--border-light:#f0ece4;
+  --error:#c44b3f;--error-light:#fdf0ef;
+  --success:#3a7d5c;--success-light:#eef7f1;
+  --radius:8px;--radius-lg:12px;--radius-sm:6px;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.04);
+  --shadow-lg:0 12px 40px rgba(0,0,0,.12);
+  --font-display:'Playfair Display',Georgia,serif;
+  --font-body:'DM Sans',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  --transition:0.2s ease;
+  --sidebar-w:256px;
+  --header-h:56px;
+  --preview-header-h:52px;
+}
+html{font-size:15px;-webkit-font-smoothing:antialiased}
+body{font-family:var(--font-body);color:var(--text);background:var(--bg);height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column}
+button{font-family:var(--font-body);cursor:pointer;border:none;background:none;font-size:inherit}
+input,textarea,select{font-family:var(--font-body);font-size:inherit;border:none;outline:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--radius-sm)}
+::selection{background:var(--accent-light);color:var(--accent)}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text-muted)}
+
+.app-header{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:var(--header-h);background:var(--sidebar);color:#fff;flex-shrink:0;z-index:100;border-bottom:1px solid rgba(255,255,255,.06)}
+.header-left{display:flex;align-items:center;gap:10px}
+.hamburger{display:none;width:36px;height:36px;border-radius:var(--radius-sm);align-items:center;justify-content:center;color:rgba(255,255,255,.7);transition:var(--transition);flex-shrink:0}
+.hamburger:hover{background:rgba(255,255,255,.1);color:#fff}
+.hamburger svg{width:20px;height:20px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:28px;height:28px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;font-family:var(--font-mono)}
+.logo-text{font-family:var(--font-display);font-size:1.15rem;font-weight:600;letter-spacing:-.02em}
+.logo-text span{color:var(--highlight);font-weight:400;font-size:.8rem;margin-left:2px;font-family:var(--font-mono)}
+.header-center{display:flex;align-items:center;gap:12px}
+.mode-toggle{display:flex;background:rgba(255,255,255,.08);border-radius:var(--radius);padding:3px;gap:2px}
+.mode-btn{padding:6px 16px;border-radius:var(--radius-sm);font-size:.8rem;font-weight:500;color:rgba(255,255,255,.5);transition:var(--transition);white-space:nowrap}
+.mode-btn.active{background:var(--accent);color:#fff}
+.mode-btn:hover:not(.active){color:rgba(255,255,255,.8)}
+.header-actions{display:flex;align-items:center;gap:8px}
+.header-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius-sm);font-size:.8rem;font-weight:500;color:rgba(255,255,255,.7);transition:var(--transition);background:rgba(255,255,255,.06);white-space:nowrap}
+.header-btn:hover{background:rgba(255,255,255,.12);color:#fff}
+.header-btn svg{width:15px;height:15px;flex-shrink:0}
+.header-btn-label{display:inline}
+.export-dropdown{position:relative}
+.export-menu{position:absolute;top:calc(100% + 6px);right:0;background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow-lg);padding:4px;min-width:160px;display:none;z-index:200;border:1px solid var(--border)}
+.export-menu.open{display:block}
+.export-menu button{width:100%;text-align:left;padding:8px 12px;border-radius:var(--radius-sm);font-size:.82rem;color:var(--text);display:flex;align-items:center;gap:8px;transition:var(--transition)}
+.export-menu button:hover{background:var(--bg)}
+.export-menu button svg{width:14px;height:14px;color:var(--text-muted)}
+.profile-badge{font-size:.72rem;padding:3px 10px;background:rgba(196,154,60,.15);color:var(--highlight);border-radius:20px;font-weight:500;white-space:nowrap}
+
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:150;opacity:0;transition:opacity .25s ease;pointer-events:none}
+.sidebar-overlay.open{opacity:1;pointer-events:auto}
+
+.app-main{display:flex;flex:1;overflow:hidden;position:relative}
+
+.template-sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;transition:transform .25s ease;z-index:160}
+.sidebar-header{padding:16px 16px 12px;border-bottom:1px solid var(--border)}
+.sidebar-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);font-weight:600;margin-bottom:10px}
+.template-search{width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.85rem;color:var(--text);transition:var(--transition)}
+.template-search:focus{border-color:var(--accent);background:var(--surface)}
+.template-search::placeholder{color:var(--text-light)}
+.sidebar-scroll{flex:1;overflow-y:auto;padding:8px;-webkit-overflow-scrolling:touch}
+.category-group{margin-bottom:4px}
+.category-label{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600;cursor:pointer;border-radius:var(--radius-sm);transition:var(--transition);user-select:none}
+.category-label:hover{background:var(--bg);color:var(--text)}
+.category-label .chevron{transition:transform .2s;font-size:.6rem}
+.category-label.collapsed .chevron{transform:rotate(-90deg)}
+.template-item{display:flex;align-items:center;gap:10px;padding:9px 12px;margin:1px 0;border-radius:var(--radius-sm);cursor:pointer;transition:var(--transition);font-size:.85rem;color:var(--text);border:1px solid transparent}
+.template-item:hover{background:var(--bg)}
+.template-item.active{background:var(--accent-light);color:var(--accent-text);border-color:rgba(43,94,72,.15);font-weight:500}
+.template-item .t-icon{width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0;font-weight:600}
+.cat-business .t-icon{background:#fef3e2;color:#b8860b}
+.cat-academic .t-icon{background:#e8f0fe;color:#3b6fc4}
+.cat-technical .t-icon{background:#f3e8fd;color:#7c3aed}
+.cat-field .t-icon{background:#e8fdf0;color:#16a34a}
+.cat-legal .t-icon{background:#fde8e8;color:#dc2626}
+.cat-hr .t-icon{background:#fdf0e8;color:#ea580c}
+.cat-finance .t-icon{background:#e8fdfa;color:#0d9488}
+.cat-general .t-icon{background:#f0f0f0;color:#666}
+.template-item .t-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar-footer{padding:12px 16px;border-top:1px solid var(--border-light);font-size:.72rem;color:var(--text-light);text-align:center}
+
+.input-panel{flex:1;min-width:0;max-width:520px;display:flex;flex-direction:column;background:var(--bg);border-right:1px solid var(--border);overflow:hidden}
+.input-header{padding:16px 20px 12px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;background:var(--surface);flex-shrink:0}
+.input-header-left{display:flex;align-items:center;gap:8px;min-width:0}
+.input-header-left h2{font-size:.95rem;font-weight:600;white-space:nowrap}
+.input-header-left .template-tag{font-size:.68rem;padding:2px 8px;background:var(--accent-light);color:var(--accent-text);border-radius:20px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.input-body{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:6px;-webkit-overflow-scrolling:touch}
+
+.textarea-section{display:flex;flex-direction:column;gap:6px;flex:1;min-height:0}
+.input-label{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.input-label .count{font-weight:400;text-transform:none;letter-spacing:0;font-family:var(--font-mono);font-size:.7rem}
+.main-textarea{width:100%;min-height:180px;flex:1;resize:vertical;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:.9rem;line-height:1.65;color:var(--text);transition:var(--transition)}
+.main-textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(43,94,72,.08)}
+.main-textarea::placeholder{color:var(--text-light)}
+
+.generate-section{padding:16px 20px;background:var(--surface);border-top:1px solid var(--border-light);flex-shrink:0}
+.generate-btn{width:100%;padding:12px 20px;background:var(--accent);color:#fff;border-radius:var(--radius);font-size:.9rem;font-weight:600;transition:var(--transition);display:flex;align-items:center;justify-content:center;gap:8px}
+.generate-btn:hover{background:var(--accent-hover);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.generate-btn:active{transform:translateY(0)}
+.generate-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.generate-btn .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.generate-hint{text-align:center;font-size:.72rem;color:var(--text-light);margin-top:8px}
+.generate-hint kbd{padding:1px 5px;background:var(--bg);border:1px solid var(--border);border-radius:3px;font-family:var(--font-mono);font-size:.68rem}
+
+.preview-panel{flex:1.4;display:flex;flex-direction:column;background:var(--surface);overflow:hidden;min-width:0;position:relative}
+.preview-header{height:var(--preview-header-h);padding:0 24px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--surface);position:relative;z-index:2}
+.preview-header h2{font-size:.95rem;font-weight:600;white-space:nowrap}
+.preview-actions{display:flex;gap:6px}
+.preview-action-btn{padding:6px 12px;border-radius:var(--radius-sm);font-size:.78rem;font-weight:500;color:var(--text-muted);border:1px solid var(--border);transition:var(--transition);display:flex;align-items:center;gap:5px;white-space:nowrap}
+.preview-action-btn:hover{background:var(--bg);color:var(--text);border-color:var(--text-light)}
+
+.preview-scroll{position:absolute;top:var(--preview-header-h);left:0;right:0;bottom:0;overflow-y:auto;overflow-x:hidden;padding:32px 40px;-webkit-overflow-scrolling:touch;scroll-behavior:smooth}
+.report-render{max-width:720px;margin:0 auto}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:40px 20px;color:var(--text-muted)}
+.empty-icon{font-size:3rem;margin-bottom:16px;opacity:.3}
+.empty-state h3{font-family:var(--font-display);font-size:1.3rem;color:var(--text);margin-bottom:8px;font-weight:600}
+.empty-state p{font-size:.88rem;max-width:340px;line-height:1.6}
+
+.report-render .r-title{font-family:var(--font-display);font-size:1.8rem;font-weight:700;color:var(--text);margin-bottom:4px;letter-spacing:-.02em;line-height:1.2}
+.report-render .r-meta{font-size:.78rem;color:var(--text-muted);margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid var(--border)}
+.report-render .r-section{margin-bottom:28px;animation:fadeUp .4s ease both}
+.report-render .r-section:nth-child(2){animation-delay:.05s}
+.report-render .r-section:nth-child(3){animation-delay:.1s}
+.report-render .r-section:nth-child(4){animation-delay:.15s}
+.report-render .r-section:nth-child(5){animation-delay:.2s}
+.report-render .r-section:nth-child(6){animation-delay:.25s}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.report-render .r-section-title{font-family:var(--font-display);font-size:1.15rem;font-weight:600;color:var(--text);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:8px}
+.report-render .r-section-title .r-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.r-dot.findings{background:#3b82f6}
+.r-dot.risks{background:#f59e0b}
+.r-dot.recommendations{background:#22c55e}
+.r-dot.data{background:#8b5cf6}
+.r-dot.default{background:var(--accent)}
+.report-render .r-content{font-size:.92rem;line-height:1.75;color:#3a3a3a}
+.report-render .r-content p{margin-bottom:10px}
+.report-render .r-content ul,.report-render .r-content ol{margin:8px 0 12px 20px}
+.report-render .r-content li{margin-bottom:4px}
+.report-render .r-word-count{font-size:.68rem;color:var(--text-light);font-family:var(--font-mono);text-align:right;margin-top:4px}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);animation:fadeIn .2s ease;padding:16px}
+.modal-overlay.open{display:flex}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:580px;max-width:100%;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);display:flex;flex-direction:column;animation:slideUp .25s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.modal-header{padding:20px 24px 16px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-header h2{font-size:1.1rem;font-weight:600}
+.modal-close{width:32px;height:32px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:var(--transition);font-size:1.1rem;flex-shrink:0}
+.modal-close:hover{background:var(--bg);color:var(--text)}
+.modal-body{flex:1;overflow-y:auto;padding:20px 24px;-webkit-overflow-scrolling:touch}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border-light);display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;flex-shrink:0}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+.form-input{width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.88rem;color:var(--text);transition:var(--transition)}
+.form-input:focus{border-color:var(--accent);background:var(--surface);box-shadow:0 0 0 3px rgba(43,94,72,.08)}
+.form-input::placeholder{color:var(--text-light)}
+textarea.form-input{min-height:80px;resize:vertical;line-height:1.5}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-hint{font-size:.72rem;color:var(--text-light);margin-top:4px;line-height:1.4}
+.form-select{width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.88rem;color:var(--text);cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8580' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;transition:var(--transition)}
+.form-select:focus{border-color:var(--accent)}
+.range-group{display:flex;align-items:center;gap:12px}
+.range-group input[type=range]{flex:1;accent-color:var(--accent)}
+.range-value{font-family:var(--font-mono);font-size:.82rem;color:var(--text-muted);min-width:28px;text-align:right}
+.btn{padding:9px 18px;border-radius:var(--radius-sm);font-size:.85rem;font-weight:500;transition:var(--transition);white-space:nowrap}
+.btn-ghost{color:var(--text-muted);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--bg);color:var(--text)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-sm{padding:6px 12px;font-size:.78rem}
+.test-result{margin-top:12px;padding:10px 14px;border-radius:var(--radius-sm);font-size:.82rem;display:none;align-items:center;gap:8px;flex:1;min-width:0}
+.test-result.show{display:flex}
+.test-result.success{background:var(--success-light);color:var(--success)}
+.test-result.error{background:var(--error-light);color:var(--error)}
+.profile-section{margin-top:20px;padding-top:16px;border-top:1px solid var(--border-light)}
+.profile-section h3{font-size:.82rem;font-weight:600;color:var(--text-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em}
+.profile-list{display:flex;flex-direction:column;gap:6px}
+.profile-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border);cursor:pointer;transition:var(--transition);gap:8px}
+.profile-item:hover{border-color:var(--accent);background:var(--accent-light)}
+.profile-item.active{border-color:var(--accent);background:var(--accent-light)}
+.profile-item .p-info{min-width:0;flex:1}
+.profile-item .p-name{font-size:.85rem;font-weight:500}
+.profile-item .p-url{font-size:.72rem;color:var(--text-muted);font-family:var(--font-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.profile-item .p-delete{width:24px;height:24px;border-radius:4px;display:flex;align-items:center;justify-content:center;color:var(--text-light);font-size:.85rem;transition:var(--transition);flex-shrink:0}
+.profile-item .p-delete:hover{background:var(--error-light);color:var(--error)}
+
+.toast-container{position:fixed;bottom:20px;right:20px;z-index:600;display:flex;flex-direction:column;gap:8px;max-width:calc(100vw - 40px)}
+.toast{padding:12px 18px;border-radius:var(--radius);font-size:.85rem;font-weight:500;box-shadow:var(--shadow-lg);animation:toastIn .3s ease;display:flex;align-items:center;gap:8px;max-width:340px;word-break:break-word}
+.toast.success{background:var(--success);color:#fff}
+.toast.error{background:var(--error);color:#fff}
+.toast.info{background:var(--sidebar);color:#fff}
+@keyframes toastIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+@keyframes toastOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(30px)}}
+
+.mobile-tabs{display:none;position:fixed;bottom:0;left:0;right:0;z-index:120;background:var(--surface);border-top:1px solid var(--border);padding:6px 8px env(safe-area-inset-bottom,8px);justify-content:space-around;align-items:center}
+.mobile-tab{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 12px;border-radius:var(--radius-sm);color:var(--text-muted);font-size:.65rem;font-weight:500;transition:var(--transition);min-width:60px;position:relative}
+.mobile-tab.active{color:var(--accent);background:var(--accent-light)}
+.mobile-tab svg{width:20px;height:20px}
+
+@media(max-width:1200px){:root{--sidebar-w:220px}.input-header-left .template-tag{max-width:140px}.preview-scroll{padding:24px 28px}}
+@media(max-width:1024px){:root{--header-h:50px}.app-header{padding:0 14px}.logo-text{font-size:1rem}.logo-text span{display:none}.mode-btn{padding:5px 12px;font-size:.75rem}.header-btn{padding:6px 10px}.header-btn-label{display:none}.profile-badge{display:none!important}.template-sidebar{position:fixed;top:var(--header-h);left:0;bottom:0;width:280px;min-width:280px;transform:translateX(-100%);box-shadow:var(--shadow-lg);z-index:160}.template-sidebar.open{transform:translateX(0)}.sidebar-overlay{display:block;z-index:155}.hamburger{display:flex}.app-main{flex-direction:column}.input-panel{max-width:none;border-right:none;border-bottom:1px solid var(--border);flex:1;min-height:0}.preview-panel{flex:1;min-height:0}.input-body{padding:12px 16px}.generate-section{padding:12px 16px}.preview-scroll{padding:20px 24px}}
+@media(max-width:768px){:root{--header-h:48px;--preview-header-h:48px}html{font-size:14px}.app-header{padding:0 10px}.logo-icon{width:24px;height:24px;font-size:11px;border-radius:5px}.logo-text{font-size:.95rem}.header-center{gap:6px}.mode-toggle{padding:2px;gap:1px}.mode-btn{padding:4px 10px;font-size:.72rem;border-radius:4px}.header-actions{gap:4px}.header-btn{padding:5px 8px;font-size:.75rem;border-radius:4px}.header-btn svg{width:14px;height:14px}.template-sidebar{width:260px;min-width:260px}.app-main{flex-direction:column;padding-bottom:56px}.input-panel{max-width:none;border:none;display:none;flex:1;min-height:0}.input-panel.mobile-active{display:flex}.preview-panel{flex:1;min-width:0;display:none}.preview-panel.mobile-active{display:flex}.input-header{padding:12px 14px 10px}.input-header-left .template-tag{max-width:120px;font-size:.62rem}.input-body{padding:12px 14px}.main-textarea{min-height:130px;font-size:.88rem;padding:12px 14px}.generate-section{padding:12px 14px}.generate-btn{padding:11px 16px;font-size:.85rem}.generate-hint{display:none}.preview-header{padding:0 14px}.preview-header h2{font-size:.88rem}.preview-action-btn{padding:5px 8px;font-size:.72rem}.preview-scroll{padding:16px 16px}.report-render .r-title{font-size:1.4rem}.report-render .r-section-title{font-size:1.05rem}.report-render .r-content{font-size:.88rem;line-height:1.7}.mobile-tabs{display:flex}.modal{width:100%;max-width:100%;border-radius:var(--radius-lg) var(--radius-lg) 0 0;max-height:calc(100dvh - 20px);margin-top:auto}.modal-overlay{align-items:flex-end;padding:0}.modal-header{padding:16px 16px 12px}.modal-header h2{font-size:1rem}.modal-body{padding:16px}.modal-footer{padding:12px 16px}.form-row{grid-template-columns:1fr;gap:8px}.form-group{margin-bottom:12px}.export-menu{right:-40px;min-width:150px}.toast-container{bottom:72px;right:12px;left:12px}.toast{max-width:100%}}
+@media(max-width:380px){html{font-size:13px}.logo-text{font-size:.88rem}.mode-btn{padding:4px 8px;font-size:.68rem}.header-btn{padding:4px 6px}.mobile-tab{min-width:48px;padding:5px 8px;font-size:.6rem}.preview-scroll{padding:12px}.report-render .r-title{font-size:1.25rem}}
+@media(max-height:500px) and (orientation:landscape){:root{--header-h:40px}.logo-icon{width:22px;height:22px;font-size:10px}.logo-text{font-size:.85rem}.mobile-tabs{display:none}.app-main{padding-bottom:0}.input-panel.mobile-active,.preview-panel.mobile-active{display:flex}.app-main{flex-direction:row}.input-panel{border-right:1px solid var(--border);border-bottom:none;max-width:45%}.preview-panel{flex:1}}
+@media print{.app-header,.template-sidebar,.input-panel,.preview-header,.empty-state,.toast-container,.modal-overlay,.mobile-tabs,.sidebar-overlay,.hamburger{display:none!important}.app-main{display:block!important}.input-panel{display:none!important}.preview-panel{position:static;width:100%;border:none;display:block!important;flex:none;overflow:visible}.preview-scroll{position:static;padding:0;overflow:visible}.report-render .r-hidden{display:block!important}body{background:#fff;overflow:visible;height:auto}.report-render .r-section{break-inside:avoid}}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-left">
+    <button class="hamburger" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Toggle templates">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="logo">
+      <div class="logo-icon">RF</div>
+      <div class="logo-text">ReportForge <span>AI</span></div>
+    </div>
+  </div>
+  <div class="header-center">
+    <div class="mode-toggle">
+      <button class="mode-btn active" data-mode="offline" onclick="setMode('offline')">Offline</button>
+      <button class="mode-btn" data-mode="llm" onclick="setMode('llm')">LLM</button>
+    </div>
+    <span class="profile-badge" id="profileBadge" style="display:none"></span>
+  </div>
+  <div class="header-actions">
+    <button class="header-btn" id="apiConfigBtn" onclick="openApiModal()" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 2v4"/><path d="M17 2v4"/><path d="M5 10h14"/><path d="M5 10v4a8 8 0 0016 0v-4"/><path d="M12 18v4"/><circle cx="12" cy="7" r="1" fill="currentColor" stroke="none"/>
+      </svg>
+      <span class="header-btn-label">API Config</span>
+    </button>
+    <div class="export-dropdown">
+      <button class="header-btn primary" onclick="toggleExportMenu()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span class="header-btn-label">Export</span>
+      </button>
+      <div class="export-menu" id="exportMenu">
+        <button onclick="exportReport('pdf')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF (Print)</button>
+        <button onclick="exportReport('html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>HTML File</button>
+        <button onclick="exportReport('docx')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>DOCX</button>
+        <button onclick="exportReport('clipboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy Text</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<main class="app-main">
+  <aside class="template-sidebar" id="templateSidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">Templates</div>
+      <input type="text" class="template-search" placeholder="Search templates..." oninput="filterTemplates(this.value)">
+    </div>
+    <div class="sidebar-scroll" id="templateList"></div>
+    <div class="sidebar-footer">21 templates available</div>
+  </aside>
+
+  <section class="input-panel mobile-active" id="inputPanel">
+    <div class="input-header">
+      <div class="input-header-left">
+        <h2>Input</h2>
+        <span class="template-tag" id="selectedTemplateTag">Executive Summary</span>
+      </div>
+    </div>
+    <div class="input-body">
+      <div class="textarea-section">
+        <div class="input-label">
+          <span>Paste your text or research here</span>
+          <span class="count" id="mainCount">0 words</span>
+        </div>
+        <textarea class="main-textarea" id="mainInput" placeholder="Paste your raw research notes, data summaries, meeting transcripts, or any unstructured text here. ReportForge will transform it into a clean, structured report." oninput="updateCounts()"></textarea>
+      </div>
+    </div>
+    <div class="generate-section">
+      <button class="generate-btn" id="generateBtn" onclick="generate()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        Generate Report
+      </button>
+      <div class="generate-hint">Press <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to generate</div>
+    </div>
+  </section>
+
+  <section class="preview-panel" id="previewPanel">
+    <div class="preview-header">
+      <h2>Report Preview</h2>
+      <div class="preview-actions" id="previewActions" style="display:none">
+        <button class="preview-action-btn" onclick="expandAll()">Expand All</button>
+        <button class="preview-action-btn" onclick="collapseAll()">Collapse All</button>
+      </div>
+    </div>
+    <div class="preview-scroll" id="previewContent">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">&#9997;</div>
+        <h3>Your report will appear here</h3>
+        <p>Select a template, paste your text, and click Generate to see a beautifully structured report.</p>
+      </div>
+      <div class="report-render" id="reportRender" style="display:none"></div>
+    </div>
+  </section>
+</main>
+
+<nav class="mobile-tabs" id="mobileTabs">
+  <button class="mobile-tab active" data-panel="input" onclick="switchMobileTab('input')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    Input
+  </button>
+  <button class="mobile-tab" data-panel="preview" onclick="switchMobileTab('preview')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    Preview
+  </button>
+  <button class="mobile-tab" data-panel="templates" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    Templates
+  </button>
+</nav>
+
+<div class="modal-overlay" id="apiModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>API Configuration</h2>
+      <button class="modal-close" onclick="closeApiModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="profile-section" style="margin-top:0;padding-top:0;border-top:none">
+        <h3>Saved Profiles</h3>
+        <div class="profile-list" id="profileList"></div>
+        <div style="margin-top:10px">
+          <div class="form-row">
+            <div class="form-group" style="margin-bottom:0">
+              <input type="text" class="form-input" id="newProfileName" placeholder="Profile name (e.g., Work)">
+            </div>
+            <div style="display:flex;align-items:flex-end">
+              <button class="btn btn-ghost btn-sm" onclick="saveCurrentAsProfile()" style="width:100%">Save Current as Profile</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border-light)">
+        <div class="form-group">
+          <label class="form-label">Request URL / Base URL</label>
+          <input type="text" class="form-input" id="apiUrl" placeholder="https://api.openai.com/v1/chat/completions">
+          <div class="form-hint">OpenAI, Ollama (http://localhost:11434/api/generate), or any compatible endpoint</div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">API Key</label><input type="password" class="form-input" id="apiKey" placeholder="sk-..."></div>
+          <div class="form-group"><label class="form-label">Model Name</label><input type="text" class="form-input" id="modelName" placeholder="gpt-4o"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Request Format</label>
+          <select class="form-select" id="requestFormat"><option value="openai">OpenAI-compatible (Chat Completions)</option><option value="raw">Raw prompt (Ollama / LM Studio)</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">System / Role Prompt</label><textarea class="form-input" id="systemPrompt" placeholder="You are a professional report writer..."></textarea></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Temperature</label><div class="range-group"><input type="range" id="temperature" min="0" max="1" step="0.05" value="0.3" oninput="document.getElementById('tempVal').textContent=this.value"><span class="range-value" id="tempVal">0.3</span></div></div>
+          <div class="form-group"><label class="form-label">Max Tokens</label><input type="number" class="form-input" id="maxTokens" value="2000" min="256" max="8000" step="256"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Custom Headers (JSON)</label><input type="text" class="form-input" id="customHeaders" placeholder='{"X-Custom-Header": "value"}'><div class="form-hint">For Azure OpenAI or private proxy authentication</div></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="test-result" id="testResult"></div>
+      <div style="flex:1"></div>
+      <button class="btn btn-ghost" onclick="testConnection()">Test Connection</button>
+      <button class="btn btn-primary" onclick="saveApiConfig()">Save &amp; Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+var TEMPLATES=[
+  {id:'executive-summary',name:'Executive Summary Report',category:'Business',icon:'ES',sections:[{name:'Overview',keywords:['overview','summary','introduction','background','purpose','about','context','company','organization','project','initiative','report'],color:'default',maxWords:150},{name:'Key Findings',keywords:['found','discovered','revealed','shows','indicates','data','results','evidence','analysis','finding','significant','notable','important','key','metric','growth','decline','increase','decrease','performance','outcome'],color:'findings',maxWords:150},{name:'Recommendations',keywords:['recommend','suggest','should','propose','action','implement','next','strategy','improve','enhance','consider','priority','plan','steps','opportunity'],color:'recommendations',maxWords:150}],tone:'Professional, concise, executive-friendly.'},
+  {id:'market-research',name:'Market Research Report',category:'Business',icon:'MR',sections:[{name:'Market Overview',keywords:['market','industry','sector','landscape','size','value','growth','trend','segment','region','global','demand','supply'],color:'default',maxWords:150},{name:'Data & Statistics',keywords:['data','statistics','figure','percent','revenue','volume','rate','number','billion','million','year','quarter','forecast','survey'],color:'data',maxWords:150},{name:'Insights',keywords:['insight','implication','opportunity','threat','driver','barrier','challenge','shift','emerging','notable','pattern','factor'],color:'findings',maxWords:150},{name:'Gaps & Limitations',keywords:['gap','limitation','constraint','missing','unclear','further','research','needed','insufficient','bias'],color:'risks',maxWords:100}],tone:'Data-driven, analytical.'},
+  {id:'competitive-analysis',name:'Competitive Analysis',category:'Business',icon:'CA',sections:[{name:'Landscape',keywords:['landscape','competitor','player','company','market','leader','brand','major','dominant','emerging','startup'],color:'default',maxWords:150},{name:'SWOT Analysis',keywords:['strength','weakness','opportunity','threat','advantage','disadvantage','internal','external','capability','vulnerability'],color:'data',maxWords:150},{name:'Positioning',keywords:['position','differentiat','unique','value','proposition','niche','target','segment','strategy','brand','price','quality','feature'],color:'findings',maxWords:150}],tone:'Strategic and comparative.'},
+  {id:'project-status',name:'Project Status Report',category:'Business',icon:'PS',sections:[{name:'Milestones',keywords:['milestone','complete','finish','deliver','phase','stage','sprint','deadline','achieve','progress','launch','release','deploy'],color:'findings',maxWords:150},{name:'Risks',keywords:['risk','blocker','issue','delay','concern','dependency','bottleneck','challenge','problem','critical','escalat'],color:'risks',maxWords:150},{name:'Next Steps',keywords:['next','plan','upcoming','schedule','assign','owner','action','task','todo','follow','prepare','begin','start','focus'],color:'recommendations',maxWords:150}],tone:'Clear, direct, status-oriented.'},
+  {id:'incident-report',name:'Incident Report',category:'Business',icon:'IR',sections:[{name:'Summary',keywords:['summary','incident','event','occurred','happen','affect','impact','overview','report','describe'],color:'default',maxWords:120},{name:'Timeline',keywords:['timeline','time','date','hour','minute','first','then','after','before','during','detect','identify','respond','notify'],color:'data',maxWords:150},{name:'Impact',keywords:['impact','affect','damage','loss','outage','downtime','customer','user','service','system','severity','critical'],color:'risks',maxWords:150},{name:'Corrective Action',keywords:['action','fix','resolve','prevent','corrective','remediat','patch','update','improve','monitor','alert','procedure'],color:'recommendations',maxWords:150}],tone:'Factual, chronological, objective.'},
+  {id:'literature-review',name:'Literature Review',category:'Academic',icon:'LR',sections:[{name:'Introduction',keywords:['introduction','purpose','scope','review','aim','objective','research','question','methodology','search','criteria'],color:'default',maxWords:150},{name:'Themes',keywords:['theme','category','group','cluster','topic','area','finding','study','research','author','paper','journal','theory','model','framework'],color:'findings',maxWords:200},{name:'Critical Analysis',keywords:['however','but','although','contrast','disagree','limitation','weakness','gap','inconsistent','conflicting','critique','challenge','debate'],color:'data',maxWords:150},{name:'Conclusion',keywords:['conclusion','summary','suggest','implication','future','direction','need','overall','synthesis','consensus','emerge'],color:'recommendations',maxWords:100}],tone:'Academic, analytical, well-structured.'},
+  {id:'research-paper',name:'Research Paper Summary',category:'Academic',icon:'RP',sections:[{name:'Abstract',keywords:['abstract','summary','purpose','objective','aim','background','method','result','conclusion','study','research'],color:'default',maxWords:120},{name:'Methods',keywords:['method','methodology','approach','design','sample','participant','data','collect','instrument','procedure','technique','analysis','experiment','survey'],color:'data',maxWords:150},{name:'Results',keywords:['result','finding','show','reveal','indicate','demonstrate','significant','correlation','difference','effect','outcome','statistic'],color:'findings',maxWords:150},{name:'Discussion',keywords:['discuss','implication','interpret','suggest','consistent','compare','previous','literature','limitation','future','recommend','explain'],color:'recommendations',maxWords:150}],tone:'Academic, precise, evidence-based.'},
+  {id:'case-study',name:'Case Study Report',category:'Academic',icon:'CS',sections:[{name:'Background',keywords:['background','context','organization','company','setting','describe','introduction','subject','location','history','situation'],color:'default',maxWords:150},{name:'Analysis',keywords:['analysis','examine','investigate','identify','factor','cause','reason','pattern','theme','data','evidence','observation','assess'],color:'data',maxWords:200},{name:'Findings',keywords:['finding','discover','reveal','show','result','outcome','determine','conclude','evidence','suggest','indicate','key','notable'],color:'findings',maxWords:150},{name:'Lessons Learned',keywords:['lesson','learn','takeaway','implication','recommend','suggest','apply','transferable','generalize','insight','future','practice'],color:'recommendations',maxWords:120}],tone:'Narrative yet analytical.'},
+  {id:'tech-spec',name:'Technical Specification',category:'Technical',icon:'TS',sections:[{name:'Overview',keywords:['overview','purpose','scope','system','application','service','product','architecture','design','goal','requirement','introduction'],color:'default',maxWords:150},{name:'Architecture',keywords:['architecture','component','module','layer','service','database','api','interface','protocol','microservice','server','client','infrastructure','deploy','cloud'],color:'data',maxWords:200},{name:'Requirements',keywords:['requirement','must','shall','should','specification','constraint','dependency','prerequisite','minimum','performance','security','scalability','compliance'],color:'findings',maxWords:150},{name:'Risks & Considerations',keywords:['risk','consideration','tradeoff','limitation','challenge','concern','mitigation','alternative','assumption','dependency','technical debt'],color:'risks',maxWords:120}],tone:'Technical, precise, unambiguous.'},
+  {id:'bug-report',name:'Bug / Issue Report',category:'Technical',icon:'BR',sections:[{name:'Description',keywords:['bug','issue','error','problem','defect','fault','crash','fail','broken','unexpected','incorrect','wrong','anomaly'],color:'default',maxWords:120},{name:'Steps to Reproduce',keywords:['step','reproduce','action','click','navigate','enter','submit','open','select','perform','sequence','instruction','trigger','input'],color:'data',maxWords:150},{name:'Impact',keywords:['impact','affect','user','customer','severity','priority','critical','blocker','workaround','frequency','scope','production'],color:'risks',maxWords:120},{name:'Proposed Fix',keywords:['fix','solution','resolve','patch','correct','update','change','modify','approach','root','cause','recommend','implement','code','deploy'],color:'recommendations',maxWords:150}],tone:'Clear, reproducible, factual.'},
+  {id:'api-docs',name:'API Documentation Summary',category:'Technical',icon:'AD',sections:[{name:'Endpoints',keywords:['endpoint','route','url','path','get','post','put','delete','patch','request','response','resource','parameter','query','header','body'],color:'default',maxWords:200},{name:'Authentication',keywords:['authentication','auth','token','key','oauth','bearer','credential','scope','permission','jwt','session','login','access','secret'],color:'data',maxWords:120},{name:'Examples',keywords:['example','sample','request','response','json','curl','code','snippet','demonstrate','show','output','format','payload'],color:'findings',maxWords:150},{name:'Error Handling',keywords:['error','status','code','400','401','403','404','500','exception','fail','retry','rate limit','timeout','message','handle'],color:'risks',maxWords:120}],tone:'Technical, developer-friendly.'},
+  {id:'field-survey',name:'Field Survey Report',category:'Field / NGO',icon:'FS',sections:[{name:'Scope',keywords:['scope','objective','purpose','location','area','region','community','site','target','population','coverage','goal','survey'],color:'default',maxWords:120},{name:'Methodology',keywords:['method','methodology','approach','tool','sample','size','respondent','questionnaire','interview','enumerator','data collection','technique','random'],color:'data',maxWords:150},{name:'Data & Findings',keywords:['data','finding','result','respondent','percent','majority','sample','figure','table','chart','statistic','household','survey','show','reveal'],color:'findings',maxWords:200},{name:'Recommendations',keywords:['recommend','suggest','intervention','program','action','priority','stakeholder','community','implement','address','need','gap','improve','support'],color:'recommendations',maxWords:150}],tone:'Grounded, evidence-based, community-focused.'},
+  {id:'donor-report',name:'Donor / Impact Report',category:'Field / NGO',icon:'DR',sections:[{name:'Background',keywords:['background','context','organization','mission','project','program','objective','goal','partner','funding','donor','implement','country','region'],color:'default',maxWords:120},{name:'Activities',keywords:['activity','implement','conduct','deliver','train','workshop','session','event','distribute','provide','reach','engage','outreach','service','intervention'],color:'data',maxWords:150},{name:'Outcomes',keywords:['outcome','result','achieve','impact','change','improve','increase','reduce','benefit','success','story','testimonial','evidence','progress','indicator'],color:'findings',maxWords:150},{name:'Metrics & KPIs',keywords:['metric','kpi','indicator','target','number','percent','baseline','measure','quantify','total','reach','beneficiary','household','count','budget','expenditure'],color:'recommendations',maxWords:150}],tone:'Impact-focused, transparent, accountable.'},
+  {id:'compliance-audit',name:'Compliance Audit Report',category:'Legal / Compliance',icon:'AC',sections:[{name:'Scope',keywords:['scope','audit','review','assess','framework','regulation','standard','requirement','compliance','policy','procedure','area','process','control'],color:'default',maxWords:120},{name:'Findings',keywords:['finding','observe','identify','non-compliance','violation','gap','deficiency','weakness','issue','control','evidence','sample','test','compliant'],color:'findings',maxWords:200},{name:'Risk Level',keywords:['risk','severity','critical','high','medium','low','likelihood','impact','exposure','vulnerability','material','significant','minor','major'],color:'risks',maxWords:100},{name:'Remediation',keywords:['remediat','recommend','correct','action','plan','timeline','responsible','address','mitigate','implement','improve','control','procedure','policy','update'],color:'recommendations',maxWords:150}],tone:'Formal, objective, compliance-focused.'},
+  {id:'risk-assessment',name:'Risk Assessment Report',category:'Legal / Compliance',icon:'RA',sections:[{name:'Risk Register',keywords:['risk','register','identify','category','description','source','cause','trigger','event','scenario','threat','hazard','exposure'],color:'default',maxWords:150},{name:'Likelihood & Impact',keywords:['likelihood','probability','impact','severity','rating','score','level','matrix','assessment','critical','high','medium','low','catastrophic','negligible'],color:'data',maxWords:150},{name:'Mitigation',keywords:['mitigation','control','measure','treatment','reduce','transfer','accept','avoid','strategy','action','plan','residual','monitor','review','contingency'],color:'recommendations',maxWords:150}],tone:'Systematic, risk-focused.'},
+  {id:'performance-review',name:'Performance Review Summary',category:'HR',icon:'PR',sections:[{name:'Goals & Objectives',keywords:['goal','objective','target','kpi','metric','expectation','plan','set','establish','define','quarter','annual','priority','deliverable'],color:'default',maxWords:120},{name:'Achievements',keywords:['achieve','accomplish','complete','exceed','deliver','success','contribute','recognize','award','promote','lead','initiative','impact','result','performance'],color:'findings',maxWords:150},{name:'Areas for Growth',keywords:['improve','develop','growth','area','weakness','gap','training','feedback','opportunity','skill','learn','coach','mentor','challenge','need'],color:'risks',maxWords:120}],tone:'Balanced, constructive, professional.'},
+  {id:'meeting-minutes',name:'Meeting Minutes',category:'HR',icon:'MM',sections:[{name:'Attendees & Agenda',keywords:['attendee','present','participant','agenda','meeting','date','time','location','host','facilitator','call','item','topic','purpose'],color:'default',maxWords:100},{name:'Decisions',keywords:['decide','decision','agree','approve','reject','vote','consensus','resolution','conclude','determine','confirm','ratify','choose','select'],color:'findings',maxWords:150},{name:'Action Items',keywords:['action','item','task','assign','owner','deadline','due','follow','responsible','complete','next','todo','deliver','prepare','send','schedule'],color:'recommendations',maxWords:150}],tone:'Concise, action-oriented.'},
+  {id:'budget-summary',name:'Budget Summary Report',category:'Finance',icon:'BS',sections:[{name:'Allocation',keywords:['allocation','budget','plan','approved','category','department','line item','fund','reserve','projected','proposed','assign','distribute','total'],color:'default',maxWords:150},{name:'Actuals',keywords:['actual','spent','expenditure','cost','expense','incurred','charge','payment','invoice','disbursement','outflow','cash','revenue','income'],color:'data',maxWords:150},{name:'Variance',keywords:['variance','difference','over','under','deviation','exceed','below','save','overspend','underspend','favorable','unfavorable','gap'],color:'risks',maxWords:120},{name:'Notes',keywords:['note','comment','remark','explain','reason','adjustment','reclassify','forecast','outlook','projection','assumption','context'],color:'default',maxWords:100}],tone:'Precise, numbers-driven.'},
+  {id:'financial-analysis',name:'Financial Analysis Brief',category:'Finance',icon:'FA',sections:[{name:'Revenue',keywords:['revenue','income','sales','earning','growth','recurring','subscription','gross','net','top line','turnover','receipt','stream','segment'],color:'findings',maxWords:150},{name:'Costs',keywords:['cost','expense','expenditure','operating','overhead','cogs','direct','indirect','variable','fixed','labor','material','marketing','administrative'],color:'data',maxWords:150},{name:'Margins',keywords:['margin','profit','gross margin','net margin','operating margin','ebitda','bottom line','ratio','percentage','return','roi','profitability'],color:'risks',maxWords:120},{name:'Outlook',keywords:['outlook','forecast','projection','trend','growth','expect','predict','guidance','target','scenario','base','optimistic','pessimistic','future'],color:'recommendations',maxWords:120}],tone:'Analytical, numbers-first.'},
+  {id:'plain-summary',name:'Plain Summary / TL;DR',category:'General',icon:'TL',sections:[{name:'Key Points',keywords:['key','main','important','primary','significant','critical','essential','notable','core','central','major','highlight','takeaway','point'],color:'findings',maxWords:150},{name:'Context',keywords:['context','background','because','reason','due','caused','driven','result','origin','source','factor','contributing','underlying','broadly'],color:'default',maxWords:100},{name:'Conclusion',keywords:['conclusion','therefore','thus','overall','in summary','end','final','ultimately','bottom line','so','implies','means','suggests'],color:'recommendations',maxWords:80}],tone:'Plain language, no jargon.'},
+  {id:'briefing-note',name:'Briefing Note',category:'General',icon:'BN',sections:[{name:'Issue',keywords:['issue','matter','topic','subject','concern','question','problem','situation','briefing','purpose','regarding'],color:'default',maxWords:100},{name:'Background',keywords:['background','context','history','previous','past','origin','development','evolution','timeline','lead','current','status','situation'],color:'data',maxWords:150},{name:'Options',keywords:['option','alternative','scenario','approach','choice','possible','available','consider','proposal','strategy','path','direction','course'],color:'findings',maxWords:150},{name:'Recommendation',keywords:['recommend','suggest','advise','propose','best','preferred','optimal','should','action','decision','approve','endorse'],color:'recommendations',maxWords:100}],tone:'Concise, decision-ready.'}
+];
+
+var state={
+  mode:'offline',
+  selectedTemplate:TEMPLATES[0],
+  generatedReport:null,
+  isGenerating:false,
+  sidebarOpen:false,
+  mobileTab:'input',
+  apiConfig:{
+    url:'',
+    apiKey:'',
+    model:'',
+    format:'openai',
+    systemPrompt:'You are a professional report writer. Transform the provided text into a well-structured, clear, and readable report. Follow the template structure precisely. Be concise and avoid redundancy. Do not fabricate information not present in the source text.',
+    temperature:0.3,
+    maxTokens:2000,
+    customHeaders:''
+  },
+  profiles:[],
+  activeProfile:null
+};
+
+var STOP_WORDS=['the','a','an','and','or','but','in','on','at','to','for','of','with','by','from','is','are','was','were','be','been','being','have','has','had','do','does','did','will','would','could','should','may','might','shall','can','this','that','these','those','it','its','i','we','you','he','she','they','me','us','him','her','them','my','our','your','his','their','what','which','who','whom','where','when','why','how','all','each','every','both','few','more','most','some','any','no','not','only','own','same','so','than','too','very','just','because','as','until','while','during','before','after','above','below','between','through','into','about','against','further','then','once','here','there','also','however','therefore','thus','moreover','furthermore','additionally','well','much','still','even','already','yet','one','two','new','per','via','ie','eg','etc','among','within','without','upon','across','along','amongst','beside','besides','beyond','despite','except','inside','like','near','outside','since','under','unless','whether','another','certain','different','first','last','long','great','little','old','right','big','high','low','small','large','next','early','young','important','public','bad','able'];
+
+function isMobile(){return window.innerWidth<=768;}
+function isTablet(){return window.innerWidth<=1024 && window.innerWidth>768;}
+
+function toggleSidebar(){
+  state.sidebarOpen=!state.sidebarOpen;
+  document.getElementById('templateSidebar').classList.toggle('open',state.sidebarOpen);
+  document.getElementById('sidebarOverlay').classList.toggle('open',state.sidebarOpen);
+}
+
+function closeSidebar(){
+  state.sidebarOpen=false;
+  document.getElementById('templateSidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+
+function switchMobileTab(panel){
+  state.mobileTab=panel;
+  document.getElementById('inputPanel').classList.toggle('mobile-active',panel==='input');
+  document.getElementById('previewPanel').classList.toggle('mobile-active',panel==='preview');
+  document.querySelectorAll('.mobile-tab').forEach(function(t){
+    t.classList.toggle('active',t.dataset.panel===panel);
+  });
+}
+
+window.addEventListener('resize',function(){
+  if(!isTablet() && !isMobile()) closeSidebar();
+});
+
+function init(){
+  loadFromStorage();
+  renderTemplateList();
+  selectTemplate(TEMPLATES[0]);
+  renderProfiles();
+  document.getElementById('mainInput').addEventListener('keydown',function(e){
+    if((e.ctrlKey||e.metaKey) && e.key==='Enter'){
+      e.preventDefault();
+      generate();
+    }
+  });
+  document.addEventListener('click',function(e){
+    var m=document.getElementById('exportMenu');
+    if(m.classList.contains('open') && !e.target.closest('.export-dropdown')){
+      m.classList.remove('open');
+    }
+  });
+  if(isMobile()) switchMobileTab('input');
+}
+
+function loadFromStorage(){
+  try{
+    var s=localStorage.getItem('rf_profiles');
+    if(s) state.profiles=JSON.parse(s);
+    var c=localStorage.getItem('rf_apiConfig');
+    if(c) Object.assign(state.apiConfig,JSON.parse(c));
+    var m=localStorage.getItem('rf_mode');
+    if(m) state.mode=m;
+  }catch(e){console.warn('Storage load error:',e);}
+  applyMode();
+}
+
+function saveToStorage(){
+  try{
+    localStorage.setItem('rf_profiles',JSON.stringify(state.profiles));
+    localStorage.setItem('rf_apiConfig',JSON.stringify(state.apiConfig));
+    localStorage.setItem('rf_mode',state.mode);
+  }catch(e){console.warn('Storage save error:',e);}
+}
+
+function setMode(mode){
+  state.mode=mode;
+  applyMode();
+  saveToStorage();
+}
+
+function applyMode(){
+  document.querySelectorAll('.mode-btn').forEach(function(b){
+    b.classList.toggle('active',b.dataset.mode===state.mode);
+  });
+  var a=document.getElementById('apiConfigBtn');
+  var g=document.getElementById('profileBadge');
+  if(state.mode==='llm'){
+    a.style.display='';
+    g.style.display=(state.activeProfile!==null && !isMobile()) ? '' : 'none';
+  }else{
+    a.style.display='none';
+    g.style.display='none';
+  }
+}
+
+var CATEGORIES=['Business','Academic','Technical','Field / NGO','Legal / Compliance','HR','Finance','General'];
+var CAT_CLASS={
+  'Business':'business',
+  'Academic':'academic',
+  'Technical':'technical',
+  'Field / NGO':'field',
+  'Legal / Compliance':'legal',
+  'HR':'hr',
+  'Finance':'finance',
+  'General':'general'
+};
+
+function renderTemplateList(filter){
+  filter=filter||'';
+  var c=document.getElementById('templateList');
+  var lf=filter.toLowerCase();
+  var h='';
+  CATEGORIES.forEach(function(cat){
+    var items=TEMPLATES.filter(function(t){
+      return t.category===cat && (lf==='' || t.name.toLowerCase().indexOf(lf)!==-1 || cat.toLowerCase().indexOf(lf)!==-1);
+    });
+    if(!items.length) return;
+    h+='<div class="category-group">';
+    h+='<div class="category-label" onclick="toggleCategory(this)"><span>'+cat+'</span><span class="chevron">&#9660;</span></div>';
+    h+='<div class="category-items">';
+    items.forEach(function(t){
+      var a=(state.selectedTemplate && state.selectedTemplate.id===t.id) ? 'active' : '';
+      h+='<div class="template-item cat-'+CAT_CLASS[cat]+' '+a+'" data-id="'+t.id+'" onclick="selectTemplateById(\''+t.id+'\')">';
+      h+='<div class="t-icon">'+t.icon+'</div>';
+      h+='<div class="t-name">'+t.name+'</div>';
+      h+='</div>';
+    });
+    h+='</div></div>';
+  });
+  c.innerHTML=h;
+}
+
+function filterTemplates(v){renderTemplateList(v);}
+
+function toggleCategory(el){
+  el.classList.toggle('collapsed');
+  el.nextElementSibling.style.display=el.classList.contains('collapsed') ? 'none' : '';
+}
+
+function selectTemplateById(id){
+  var t=TEMPLATES.find(function(t){return t.id===id;});
+  if(t) selectTemplate(t);
+}
+
+function selectTemplate(t){
+  state.selectedTemplate=t;
+  document.getElementById('selectedTemplateTag').textContent=t.name;
+  document.querySelectorAll('.template-item').forEach(function(el){
+    el.classList.toggle('active',el.dataset.id===t.id);
+  });
+  if(isMobile()||isTablet()) closeSidebar();
+}
+
+function updateCounts(){
+  var t=document.getElementById('mainInput').value;
+  var w=t.trim() ? t.trim().split(/\s+/).length : 0;
+  document.getElementById('mainCount').textContent=w+' words \u00b7 '+t.length+' chars';
+}
+
+function splitSentences(text){
+  text=text.replace(/\r\n/g,'\n').replace(/\n{2,}/g,'. ').replace(/\n/g,' ').replace(/\s+/g,' ').trim();
+  var raw=text.match(/[^.!?]*[.!?]+[\])"']*/g);
+  if(!raw || raw.length===0) return [text].filter(function(s){return s.trim().length>10;});
+  return raw.map(function(s){return s.trim();}).filter(function(s){return s.length>10;});
+}
+
+function extractKeywords(text){
+  return text.toLowerCase().replace(/[^a-z0-9\s-]/g,'').split(/\s+/).filter(function(w){
+    return w.length>2 && STOP_WORDS.indexOf(w)===-1;
+  });
+}
+
+function scoreSection(sentenceKw,sectionKw){
+  var score=0;
+  sentenceKw.forEach(function(w){
+    sectionKw.forEach(function(k){
+      if(w===k || w.indexOf(k)!==-1 || k.indexOf(w)!==-1) score++;
+    });
+  });
+  return score;
+}
+
+function enforceWordCap(t,m){
+  var w=t.split(/\s+/);
+  if(w.length<=m) return t;
+  return w.slice(0,m).join(' ')+'...';
+}
+
+function generateOffline(text,template){
+  var sentences=splitSentences(text);
+  if(!sentences.length) sentences=[text];
+  var buckets=template.sections.map(function(){return [];});
+  var roundRobin=0;
+
+  sentences.forEach(function(sent){
+    var sk=extractKeywords(sent);
+    var bestIdx=0, bestScore=-1;
+    template.sections.forEach(function(sec,i){
+      var sc=scoreSection(sk,sec.keywords);
+      if(sc>bestScore){bestScore=sc;bestIdx=i;}
+    });
+    if(bestScore===0){
+      bestIdx=roundRobin%template.sections.length;
+      roundRobin++;
+    }
+    buckets[bestIdx].push(sent);
+  });
+
+  var sections=template.sections.map(function(sec,i){
+    var c=buckets[i].join(' ');
+    c=enforceWordCap(c,sec.maxWords);
+    return{
+      name:sec.name,
+      content:c||'No relevant content found for this section.',
+      color:sec.color||'default',
+      wordCount:c.split(/\s+/).filter(Boolean).length
+    };
+  });
+
+  return{
+    title:template.name,
+    template:template.name,
+    mode:'Offline',
+    generatedAt:new Date().toLocaleString(),
+    sections:sections
+  };
+}
+
+async function generateLLM(text,template,config){
+  var sd=template.sections.map(function(s){return '- '+s.name;}).join('\n');
+  var um='Transform the following text into a "'+template.name+'" report.\n\nTemplate structure:\n'+sd+'\n\nTone: '+template.tone+'\nEach section max '+(template.sections[0]?template.sections[0].maxWords:150)+' words.\n\nSource text:\n---\n'+text+'\n---\n\nOutput with clear ## section headings.';
+
+  var h={'Content-Type':'application/json'};
+  if(config.customHeaders){
+    try{Object.assign(h,JSON.parse(config.customHeaders));}catch(e){}
+  }
+
+  var resp;
+  if(config.format==='raw'){
+    var b={
+      model:config.model||'',
+      prompt:config.systemPrompt+'\n\n'+um,
+      stream:false,
+      options:{temperature:parseFloat(config.temperature),num_predict:parseInt(config.maxTokens)}
+    };
+    if(config.apiKey) h['Authorization']='Bearer '+config.apiKey;
+    resp=await fetch(config.url,{method:'POST',headers:h,body:JSON.stringify(b)});
+  }else{
+    h['Authorization']='Bearer '+config.apiKey;
+    resp=await fetch(config.url,{
+      method:'POST',
+      headers:h,
+      body:JSON.stringify({
+        model:config.model||'gpt-4o',
+        messages:[{role:'system',content:config.systemPrompt},{role:'user',content:um}],
+        temperature:parseFloat(config.temperature),
+        max_tokens:parseInt(config.maxTokens)
+      })
+    });
+  }
+
+  if(!resp.ok){
+    var e=await resp.text().catch(function(){return '';});
+    throw new Error('API Error '+resp.status+': '+e.substring(0,200));
+  }
+
+  var d=await resp.json();
+  var c=config.format==='raw'
+    ?(d.response||d.text||d.content||JSON.stringify(d))
+    :(d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content||'');
+
+  if(!c) throw new Error('Empty response from API');
+  return parseLLMResponse(c,template);
+}
+
+function parseLLMResponse(content,template){
+  var sections=[];
+  var lines=content.split('\n');
+  var cur=null;
+  var cc=[];
+
+  lines.forEach(function(l){
+    var m=l.match(/^#{1,3}\s+(.+)/);
+    if(m){
+      if(cur) sections.push({name:cur.name,color:cur.color,maxWords:cur.maxWords,content:cc.join('\n').trim()});
+      var heading=m[1].replace(/[*_]/g,'').trim();
+      var mt=template.sections.find(function(s){
+        return heading.toLowerCase().indexOf(s.name.toLowerCase())!==-1 || s.name.toLowerCase().indexOf(heading.toLowerCase())!==-1;
+      });
+      cur={name:mt?mt.name:heading,color:mt?mt.color:'default',maxWords:mt?mt.maxWords:150};
+      cc=[];
+    }else{
+      cc.push(l);
+    }
+  });
+  if(cur) sections.push({name:cur.name,color:cur.color,maxWords:cur.maxWords,content:cc.join('\n').trim()});
+
+  if(!sections.length){
+    template.sections.forEach(function(s){
+      sections.push({name:s.name,content:'See full report content below.',color:s.color,maxWords:s.maxWords});
+    });
+    if(sections.length) sections[0].content=content;
+  }
+
+  sections.forEach(function(s){
+    s.content=enforceWordCap(s.content,s.maxWords||150);
+    s.wordCount=s.content.split(/\s+/).filter(Boolean).length;
+  });
+
+  return{
+    title:template.name,
+    template:template.name,
+    mode:'LLM',
+    generatedAt:new Date().toLocaleString(),
+    sections:sections
+  };
+}
+
+async function generate(){
+  var text=document.getElementById('mainInput').value.trim();
+  var template=state.selectedTemplate;
+  if(!text){showToast('Please paste some text first.','error');return;}
+  if(!template){showToast('Please select a template.','error');return;}
+  if(state.mode==='llm' && !state.apiConfig.url){
+    showToast('Please configure your API endpoint first.','error');
+    openApiModal();
+    return;
+  }
+  setGenerating(true);
+  try{
+    var r;
+    if(state.mode==='offline'){
+      r=generateOffline(text,template);
+    }else{
+      r=await generateLLM(text,template,state.apiConfig);
+    }
+    state.generatedReport=r;
+    renderReport(r);
+    showToast('Report generated successfully!','success');
+    if(isMobile()) switchMobileTab('preview');
+  }catch(e){
+    console.error('Generation error:',e);
+    showToast('Generation failed: '+e.message,'error');
+  }finally{
+    setGenerating(false);
+  }
+}
+
+function setGenerating(v){
+  state.isGenerating=v;
+  var b=document.getElementById('generateBtn');
+  if(v){
+    b.disabled=true;
+    b.innerHTML='<div class="spinner"></div> Generating...';
+  }else{
+    b.disabled=false;
+    b.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Generate Report';
+  }
+}
+
+function renderReport(report){
+  document.getElementById('emptyState').style.display='none';
+  document.getElementById('previewActions').style.display='flex';
+  var c=document.getElementById('reportRender');
+  c.style.display='block';
+  var h='<div class="r-title">'+esc(report.title)+'</div>';
+  h+='<div class="r-meta">'+esc(report.template)+' &middot; '+esc(report.mode)+' Mode &middot; Generated '+esc(report.generatedAt)+'</div>';
+  report.sections.forEach(function(s){
+    var ch=fmtContent(s.content);
+    var w=s.wordCount||s.content.split(/\s+/).filter(Boolean).length;
+    h+='<div class="r-section">';
+    h+='<div class="r-section-title"><span class="r-dot '+esc(s.color)+'"></span>'+esc(s.name)+'</div>';
+    h+='<div class="r-content">'+ch+'</div>';
+    h+='<div class="r-word-count">'+w+' words</div>';
+    h+='</div>';
+  });
+  c.innerHTML=h;
+  document.getElementById('previewContent').scrollTop=0;
+}
+
+function fmtContent(t){
+  if(!t) return '<p>No content available.</p>';
+  var h=esc(t);
+  h=h.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  h=h.replace(/\*(.+?)\*/g,'<em>$1</em>');
+  if(h.indexOf('\n- ')!==-1 || h.indexOf('- ')===0){
+    var lines=h.split('\n');
+    var result='';
+    var inList=false;
+    for(var i=0;i<lines.length;i++){
+      var line=lines[i];
+      if(line.trim().indexOf('- ')===0){
+        if(!inList){result+='<ul>';inList=true;}
+        result+='<li>'+line.trim().substring(2)+'</li>';
+      }else{
+        if(inList){result+='</ul>';inList=false;}
+        result+=line+'\n';
+      }
+    }
+    if(inList) result+='</ul>';
+    h=result;
+  }
+  h=h.replace(/\n\n+/g,'</p><p>');
+  h=h.replace(/\n/g,'<br>');
+  if(h.indexOf('<p>')!==0 && h.indexOf('<ul>')!==0) h='<p>'+h+'</p>';
+  return h;
+}
+
+function esc(t){
+  if(t==null) return '';
+  var d=document.createElement('div');
+  d.appendChild(document.createTextNode(String(t)));
+  return d.innerHTML;
+}
+
+function expandAll(){
+  document.querySelectorAll('.r-hidden').forEach(function(e){e.classList.remove('r-hidden');});
+  document.querySelectorAll('.r-collapsed-hint').forEach(function(e){e.style.display='none';});
+}
+
+function collapseAll(){
+  if(state.generatedReport) renderReport(state.generatedReport);
+}
+
+function toggleExportMenu(){
+  document.getElementById('exportMenu').classList.toggle('open');
+}
+
+function exportReport(f){
+  document.getElementById('exportMenu').classList.remove('open');
+  if(!state.generatedReport){
+    showToast('Generate a report first before exporting.','error');
+    return;
+  }
+  var handlers={pdf:exportPDF,html:exportHTML,docx:exportDOCX,clipboard:exportClipboard};
+  if(handlers[f]) handlers[f]();
+}
+
+function exportPDF(){
+  window.print();
+  showToast('Print dialog opened. Save as PDF from the print dialog.','info');
+}
+
+function exportHTML(){
+  var r=state.generatedReport;
+  var s='';
+  r.sections.forEach(function(sec){
+    s+='<div style="margin-bottom:28px">';
+    s+='<h2 style="font-family:Georgia,serif;font-size:18px;color:#2c2c2c;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #e8e4dc">'+esc(sec.name)+'</h2>';
+    s+='<div style="font-size:14px;line-height:1.75;color:#3a3a3a">'+fmtContent(sec.content)+'</div>';
+    s+='<div style="font-size:11px;color:#aaa;text-align:right;margin-top:4px">'+(sec.wordCount||0)+' words</div></div>';
+  });
+  var doc='<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(r.title)+'</title>';
+  doc+='<style>body{font-family:Georgia,serif;max-width:720px;margin:40px auto;padding:0 20px;color:#2c2c2c}h1{font-size:28px;margin-bottom:4px}p{margin:0 0 10px}ul{margin:8px 0 12px 20px}li{margin-bottom:4px}@media(max-width:600px){body{margin:20px auto;padding:0 16px}h1{font-size:22px}}</style></head>';
+  doc+='<body><h1>'+esc(r.title)+'</h1>';
+  doc+='<p style="font-size:13px;color:#888;margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid #e8e4dc">'+esc(r.template)+' &middot; '+esc(r.mode)+' Mode &middot; Generated '+esc(r.generatedAt)+'</p>';
+  doc+=s+'</body></html>';
+  dl(doc,'report-'+Date.now()+'.html','text/html');
+  showToast('HTML file downloaded.','success');
+}
+
+function exportDOCX(){
+  var r=state.generatedReport;
+  var b='';
+  r.sections.forEach(function(s){
+    b+='<h2>'+esc(s.name)+'</h2><p>'+esc(s.content)+'</p>';
+  });
+  var doc='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">';
+  doc+='<head><meta charset="UTF-8"><title>'+esc(r.title)+'</title>';
+  doc+='<style>body{font-family:Georgia,serif;font-size:12pt;line-height:1.5}h1{font-size:22pt;margin-bottom:4pt}h2{font-size:14pt;margin-top:18pt;margin-bottom:6pt;border-bottom:1pt solid #ccc;padding-bottom:3pt}p{margin:0 0 8pt}</style></head>';
+  doc+='<body><h1>'+esc(r.title)+'</h1>';
+  doc+='<p style="font-size:10pt;color:#888">'+esc(r.template)+' &middot; '+esc(r.mode)+' Mode &middot; '+esc(r.generatedAt)+'</p>';
+  doc+=b+'</body></html>';
+  var blob=new Blob([doc],{type:'application/msword'});
+  var u=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=u;
+  a.download='report-'+Date.now()+'.doc';
+  a.click();
+  URL.revokeObjectURL(u);
+  showToast('DOCX file downloaded.','success');
+}
+
+function exportClipboard(){
+  var r=state.generatedReport;
+  var t=r.title+'\n'+'='.repeat(r.title.length)+'\n'+r.template+' | '+r.mode+' Mode | '+r.generatedAt+'\n\n';
+  r.sections.forEach(function(s){
+    t+=s.name+'\n'+'-'.repeat(s.name.length)+'\n'+s.content+'\n\n';
+  });
+  navigator.clipboard.writeText(t).then(function(){
+    showToast('Report copied to clipboard.','success');
+  }).catch(function(){
+    showToast('Failed to copy.','error');
+  });
+}
+
+function dl(c,n,t){
+  var b=new Blob([c],{type:t});
+  var u=URL.createObjectURL(b);
+  var a=document.createElement('a');
+  a.href=u;
+  a.download=n;
+  a.click();
+  URL.revokeObjectURL(u);
+}
+
+function openApiModal(){
+  document.getElementById('apiModal').classList.add('open');
+  populateApiForm();
+  document.body.style.overflow='hidden';
+}
+
+function closeApiModal(){
+  document.getElementById('apiModal').classList.remove('open');
+  document.getElementById('testResult').classList.remove('show');
+  document.body.style.overflow='';
+}
+
+function populateApiForm(){
+  var c=state.apiConfig;
+  document.getElementById('apiUrl').value=c.url||'';
+  document.getElementById('apiKey').value=c.apiKey||'';
+  document.getElementById('modelName').value=c.model||'';
+  document.getElementById('requestFormat').value=c.format||'openai';
+  document.getElementById('systemPrompt').value=c.systemPrompt||'';
+  document.getElementById('temperature').value=c.temperature!=null?c.temperature:0.3;
+  document.getElementById('tempVal').textContent=c.temperature!=null?c.temperature:0.3;
+  document.getElementById('maxTokens').value=c.maxTokens||2000;
+  document.getElementById('customHeaders').value=c.customHeaders||'';
+}
+
+function saveApiConfig(){
+  var c=state.apiConfig;
+  c.url=document.getElementById('apiUrl').value.trim();
+  c.apiKey=document.getElementById('apiKey').value.trim();
+  c.model=document.getElementById('modelName').value.trim();
+  c.format=document.getElementById('requestFormat').value;
+  c.systemPrompt=document.getElementById('systemPrompt').value;
+  c.temperature=document.getElementById('temperature').value;
+  c.maxTokens=document.getElementById('maxTokens').value;
+  c.customHeaders=document.getElementById('customHeaders').value.trim();
+  saveToStorage();
+  closeApiModal();
+  showToast('API configuration saved.','success');
+}
+
+async function testConnection(){
+  var url=document.getElementById('apiUrl').value.trim();
+  var key=document.getElementById('apiKey').value.trim();
+  var model=document.getElementById('modelName').value.trim();
+  var fmt=document.getElementById('requestFormat').value;
+  var r=document.getElementById('testResult');
+
+  if(!url){
+    r.className='test-result show error';
+    r.textContent='Please enter an API URL.';
+    return;
+  }
+
+  r.className='test-result show';
+  r.style.background='var(--highlight-light)';
+  r.style.color='var(--highlight)';
+  r.textContent='Testing connection...';
+
+  try{
+    var h={'Content-Type':'application/json'};
+    if(key) h['Authorization']='Bearer '+key;
+    var b=fmt==='raw'
+      ?JSON.stringify({model:model||'',prompt:'Hello',stream:false,options:{num_predict:5}})
+      :JSON.stringify({model:model||'gpt-4o',messages:[{role:'user',content:'Say OK'}],max_tokens:5});
+    var resp=await fetch(url,{method:'POST',headers:h,body:b});
+    if(resp.ok){
+      r.className='test-result show success';
+      r.textContent='Connection successful! Endpoint reachable.';
+    }else{
+      var e=await resp.text().catch(function(){return '';});
+      r.className='test-result show error';
+      r.textContent='Error '+resp.status+': '+(e.substring(0,150)||resp.statusText);
+    }
+  }catch(e){
+    r.className='test-result show error';
+    r.textContent='Network error: '+e.message+'. Check URL and connection.';
+  }
+}
+
+function saveCurrentAsProfile(){
+  var n=document.getElementById('newProfileName').value.trim();
+  if(!n){showToast('Please enter a profile name.','error');return;}
+  state.profiles.push({
+    name:n,
+    url:document.getElementById('apiUrl').value.trim(),
+    apiKey:document.getElementById('apiKey').value.trim(),
+    model:document.getElementById('modelName').value.trim(),
+    format:document.getElementById('requestFormat').value,
+    systemPrompt:document.getElementById('systemPrompt').value,
+    temperature:document.getElementById('temperature').value,
+    maxTokens:document.getElementById('maxTokens').value,
+    customHeaders:document.getElementById('customHeaders').value.trim()
+  });
+  saveToStorage();
+  renderProfiles();
+  document.getElementById('newProfileName').value='';
+  showToast('Profile "'+n+'" saved.','success');
+}
+
+function loadProfile(i){
+  var p=state.profiles[i];
+  if(!p) return;
+  state.apiConfig=Object.assign({},p);
+  state.activeProfile=i;
+  populateApiForm();
+  renderProfiles();
+  applyMode();
+  document.getElementById('profileBadge').textContent=p.name;
+  showToast('Profile "'+p.name+'" loaded.','info');
+}
+
+function deleteProfile(i,e){
+  e.stopPropagation();
+  var n=state.profiles[i] ? state.profiles[i].name : '';
+  state.profiles.splice(i,1);
+  if(state.activeProfile===i) state.activeProfile=null;
+  saveToStorage();
+  renderProfiles();
+  showToast('Profile "'+n+'" deleted.','info');
+}
+
+function renderProfiles(){
+  var c=document.getElementById('profileList');
+  if(!state.profiles.length){
+    c.innerHTML='<div style="font-size:.82rem;color:var(--text-light);padding:8px 0">No saved profiles yet.</div>';
+    return;
+  }
+  var h='';
+  state.profiles.forEach(function(p,i){
+    var hostname='No URL';
+    if(p.url){
+      try{hostname=new URL(p.url).hostname;}catch(e){hostname=p.url;}
+    }
+    h+='<div class="profile-item '+(state.activeProfile===i?'active':'')+'" onclick="loadProfile('+i+')">';
+    h+='<div class="p-info"><div class="p-name">'+esc(p.name)+'</div>';
+    h+='<div class="p-url">'+esc(p.model||'No model')+' \u00b7 '+esc(hostname)+'</div></div>';
+    h+='<div class="p-delete" onclick="deleteProfile('+i+',event)">&times;</div></div>';
+  });
+  c.innerHTML=h;
+}
+
+function showToast(m,t){
+  t=t||'info';
+  var c=document.getElementById('toastContainer');
+  var el=document.createElement('div');
+  el.className='toast '+t;
+  el.textContent=m;
+  c.appendChild(el);
+  setTimeout(function(){
+    el.style.animation='toastOut .3s ease forwards';
+    setTimeout(function(){el.remove();},300);
+  },3000);
+}
+
+init();
+</script>
+</body>
+</html>
